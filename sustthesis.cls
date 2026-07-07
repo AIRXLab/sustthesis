@@ -23,17 +23,43 @@
   UTF8,
   a4paper,
   oneside,
-  openright
+  openright,
+  zihao=-4
 ]{ctexbook}
+
+% 英文字体
+\setmainfont{Times New Roman}
+
+% 中文正文字体：宋体 SimSun
+\setCJKmainfont{SimSun}[
+  AutoFakeBold = true,
+  AutoFakeSlant = true
+]
+
+\setlength{\baselineskip}{20pt}
 
 \ctexset{
   chapter = {
-    format     = \raggedright\heiti\zihao{3},
+    format     = \raggedright\bfseries\zihao{3},
     beforeskip = \baselineskip,
     afterskip  = \baselineskip,
     name = {},
     number = \arabic{chapter},
-    aftername = \hspace{1em}
+    aftername = \hspace{0.5em}
+  },
+  section = {
+    format     = \raggedright\bfseries\zihao{4},
+    beforeskip = 0.5\baselineskip,
+    afterskip  = 0.5\baselineskip,
+    name = {},
+    aftername = \hspace{0.5em}
+  },
+  subsection = {
+    format     = \raggedright\bfseries\zihao{-4},
+    beforeskip = 0pt,
+    afterskip  = 0pt,
+    name = {},
+    aftername = \hspace{0.5em}
   }
 }
 %------------------------------------------------
@@ -46,6 +72,7 @@
   top    = 3cm,
   bottom = 2.8cm
 }
+
 
 \RequirePackage{graphicx}
 \RequirePackage{xcolor}
@@ -132,6 +159,83 @@
   \endgroup
 }
 
+
+\newcommand{\sust@error}[1]{%
+  \PackageError{sust}{#1}{}
+}
+
+\newcommand{\sust@pdfbookmark}[2]{%
+  \pdfbookmark[#1]{#2}{#2}
+}
+
+\newcommand{\sust@phantomsection}{%
+  \phantomsection
+}
+
+\NewDocumentCommand\sust@chapter{s o m o}{%
+  \IfBooleanF{#1}{%
+    \sust@error{You have to use the star form: \string\sust@chapter*}%
+  }%
+  % \if@openright\cleardoublepage\else\clearpage\fi%
+  \IfValueTF{#2}{%
+    \ifthenelse{\equal{#2}{}}{%
+      \sust@pdfbookmark{0}{#3}%
+    }{%
+      \sust@phantomsection
+      \addcontentsline{toc}{chapter}{#2}%
+    }%
+  }{%
+    \sust@phantomsection
+    \addcontentsline{toc}{chapter}{#3}%
+  }%
+  \chapter*{#3}%
+  \IfValueTF{#4}{%
+    \ifthenelse{\equal{#4}{}}{%
+      \@mkboth{}{}%
+    }{%
+      \@mkboth{#4}{#4}%
+    }%
+  }{%
+    \@mkboth{#3}{#3}%
+  }%
+}
+\newenvironment{abstract}{%
+  \begingroup
+    \ctexset{
+      chapter= {
+        format  = \centering,
+        break   = {}
+      }
+    }
+    \sust@chapter*{摘\quad 要}%
+  \endgroup
+
+}{%
+  \par
+  \null\par
+  \textsf{关键词：}%
+}
+
+
+\newenvironment{abstract*}{%
+    % \begingroup
+    \sust@chapter*{Abstract}%
+    % \endgroup
+}{%
+  \par
+  \null\par
+  \textsf{KERWORD:}%
+}
+
 \makeatother
+
+
+\pdfstringdefDisableCommands{%
+  \let\\\relax
+  \let\quad\relax
+  \let\qquad\relax
+  \let\hspace\@gobble
+}%
+
 
 \endinput

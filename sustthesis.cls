@@ -32,6 +32,7 @@
 
 % 中文正文字体：宋体 SimSun
 \setCJKmainfont{SimSun}[
+  Path = fonts/,
   AutoFakeBold = true,
   AutoFakeSlant = true
 ]
@@ -209,11 +210,11 @@
     }
     \sust@chapter*{摘\quad 要}%
   \endgroup
-
 }{%
   \par
   \null\par
   \textsf{关键词：}%
+  \clearpage
 }
 
 

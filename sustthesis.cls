@@ -22,11 +22,9 @@
 \LoadClass[
   UTF8,
   a4paper,
-  oneside,
-  openright,
   zihao=-4
 ]{ctexbook}
-
+\raggedbottom
 % 英文字体
 \setmainfont{Times New Roman}
 
@@ -45,28 +43,33 @@
 
 \ctexset{
   chapter = {
-    format     = \raggedright\bfseries\zihao{3},
-    beforeskip = \baselineskip,
-    afterskip  = \baselineskip,
+    format     = \centering\heiti\zihao{3},
+    beforeskip = \z@,
+    afterskip  = 16bp,
     name = {},
+    numberformat= \normalfont,
     number = \arabic{chapter},
     aftername = \hspace{0.5em},
   },
   section = {
-    format     = \raggedright\bfseries\zihao{4},
+    format     = \raggedright\heiti\zihao{4},
     beforeskip = 0.5\baselineskip,
     afterskip  = 0.5\baselineskip,
     name = {},
+    numberformat= \normalfont,
     aftername = \hspace{0.5em}
   },
   subsection = {
-    format     = \raggedright\bfseries\zihao{-4},
-    beforeskip = 0pt,
-    afterskip  = 0pt,
+    format     = \raggedright\heiti\zihao{-4},
+    beforeskip = 0.5\baselineskip,
+    afterskip  = 0.5\baselineskip,
     name = {},
+    numberformat= \normalfont,
     aftername = \hspace{0.5em}
   }
 }
+
+
 %------------------------------------------------
 % 加载宏包
 %------------------------------------------------
@@ -75,6 +78,8 @@
   left   = 2.8cm,
   right  = 2.2cm,
   top    = 2.8cm,
+  headheight=0.53cm,
+  headsep=0.77cm,
   bottom = 2.2cm
 }
 
@@ -84,6 +89,12 @@
 \RequirePackage{amsmath,amssymb}
 \RequirePackage{booktabs}
 \RequirePackage{caption}
+\RequirePackage{titletoc}
+\RequirePackage{fancyhdr}
+\RequirePackage{filehook}
+\RequirePackage{pdfpages}
+
+
 
 \PassOptionsToPackage{
   linktoc            = all,
@@ -142,19 +153,48 @@
 \def\sust@author{}
 \def\sust@language{chinese}
 
+\RequirePackage{tabularx}
+
+\RequirePackage{fancyhdr}
+
+\fancypagestyle{plain}{%
+  \fancyhf{} 
+  \fancyhead{}
+  \fancyfoot{}
+  \fancyhead[CE]{\zihao{-5}毕业设计（论文）题目}%
+  \fancyhead[CO]{\zihao{-5}陕西科技大学毕业论文（设计说明书）}
+  \fancyhead[R]{\underline{\zihao{5}\thepage}}
+
+  \renewcommand{\headrule}{%
+    \vspace{-11pt}%
+    \hbox to \textwidth{%   <--- 加上这个盒子，告诉它们这一行总共这么宽！
+      \hrulefill%           <--- 现在它知道自己该向右延伸了
+      \hspace{1em}%         <--- 紧跟在右边的 3 字符空格
+    }%
+  }
+}
+
+\def\ps@chapter{}
+\ctexset{chapter/pagestyle = chapter}
 
 \renewcommand\frontmatter{%
   \cleardoublepage
   \@mainmatterfalse
   \pagenumbering{Roman}%
+  \pagestyle{empty}
 }
 
-\RequirePackage{tabularx}
+\renewcommand\mainmatter{%
+  \cleardoublepage
+  \@mainmattertrue
+  \pagenumbering{arabic}
+  \pagestyle{plain}
+}
 
 % cover, title
 \renewcommand\maketitle{%
   \cleardoublepage
-  \thispagestyle{empty}%
+  \pagestyle{empty}%
   
   \begingroup
     \begin{center}
@@ -198,7 +238,6 @@
   
 }
 
-
 \newcommand{\sust@error}[1]{%
   \PackageError{sust}{#1}{}
 }
@@ -215,7 +254,7 @@
   \IfBooleanF{#1}{%
     \sust@error{You have to use the star form: \string\sust@chapter*}%
   }%
-  % \if@openright\cleardoublepage\else\clearpage\fi%
+  \if@openright\cleardoublepage\else\clearpage\fi%
   \IfValueTF{#2}{%
     \ifthenelse{\equal{#2}{}}{%
       \sust@pdfbookmark{0}{#3}%
@@ -238,7 +277,26 @@
     \@mkboth{#3}{#3}%
   }%
 }
+
+\newbox\sust@stretch@box
+\newcommand\sust@stretch[2]{%
+  \sbox\sust@stretch@box{#2}%
+  \ifdim \wd\sust@stretch@box < #1\relax
+    \begingroup
+      \ifLuaTeX
+        \ltjsetparameter{kanjiskip = {0pt plus 2filll}}%
+      \else
+        \renewcommand\CJKglue{\hspace{0pt plus 2filll}}%
+      \fi
+      \makebox[#1][l]{#2}%
+    \endgroup
+  \else
+    \box\sust@stretch@box
+  \fi
+}
+
 \newenvironment{abstract}{%
+
   \begingroup
     \begin{center}
       \zihao{3}\heiti 设计（论文）题目
@@ -248,12 +306,15 @@
     \ctexset{
       chapter= {
         format  = \centering\zihao{4}\heiti,
+        titleformat = \sust@stretch{2.5em},
         break   = {},
         beforeskip = 0pt,
         afterindent = true
       }
     }
-    \sust@chapter*{摘\quad 要}%
+    \let\clearpage\relax
+    \let\cleardoublepage\relax
+    \sust@chapter*{摘要}%
   \endgroup
 }{%
   \par
@@ -266,9 +327,7 @@
 
 \newenvironment{abstract*}{%
   \begingroup
-    \begin{center}
-      \zihao{-2}\bfseries TITLE
-    \end{center}
+    
   \endgroup
   \begingroup
     \ctexset{
@@ -279,6 +338,11 @@
         afterindent = true
       }
     }
+    \begin{center}
+      \zihao{-2}\bfseries TITLE
+    \end{center}
+    \let\clearpage\relax
+    \let\cleardoublepage\relax
     \sust@chapter*{ABSTRACT}%
   \endgroup
 }{%
@@ -286,9 +350,51 @@
   \vspace{0.5em}
   \noindent
   {\bfseries Key words:} SUST, XI'AN
+  \clearpage
 }
 
+\RequirePackage{notoccite}
+
+\renewcommand\tableofcontents{
+  \begingroup
+  \ctexset{chapter/titleformat = \sust@stretch{2.5em}}%
+  \sust@chapter*[]{\contentsname}
+  \@starttoc{toc}%
+  \endgroup
+}
+
+\newcommand\sust@leaders{%
+  \space
+  \titlerule*[4bp]{%
+    {\bfseries\textperiodcentered}%
+  }%
+  \nobreak
+}
+
+\contentsmargin{\z@}
+\titlecontents{chapter}
+  [0em]
+  {\normalfont\zihao{-4}}
+  {\thecontentslabel\space}
+  {}
+  {\sust@leaders\thecontentspage}
+
+\titlecontents{section}
+  [2em]
+  {}
+  {\thecontentslabel\space}
+  {}
+  {\sust@leaders\thecontentspage}
+
+\titlecontents{subsection}
+  [4em]
+  {}
+  {\thecontentslabel\space}
+  {}
+  {\sust@leaders\thecontentspage}
+
 \makeatother
+
 
 
 \pdfstringdefDisableCommands{%

@@ -36,6 +36,7 @@
 ]
 
 \setCJKfamilyfont{zhkai}{KaiTi}[
+  Path = fonts/,
   AutoFakeBold=2
 ]
 

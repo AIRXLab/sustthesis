@@ -199,13 +199,13 @@
   
   \begingroup
     \begin{center}
-      \includegraphics[width=9.8cm]{sust-title.png}
+      \includegraphics[width=9.8cm]{assets/sust-title.png}
       \vspace{\baselineskip}
 
       \zihao{-1}\heiti 毕\hspace{0.5em}业\hspace{0.5em}设\hspace{0.5em}计
       \vspace{\baselineskip}
 
-      \includegraphics[width=4cm]{sust-logo.png}
+      \includegraphics[width=4cm]{assets/sust-logo.png}
     \end{center}
   \endgroup
   \begingroup

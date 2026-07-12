@@ -7,23 +7,151 @@
 \ProvidesClass{sustthesis}
   [2026/07/07 v1.0 SUSTech Thesis Class]
 
-%------------------------------------------------
-% 选项处理
-%------------------------------------------------
-\DeclareOption*{%
-  \PassOptionsToClass{\CurrentOption}{ctexbook}
+
+\RequirePackage{kvdefinekeys}
+\RequirePackage{kvsetkeys}
+\RequirePackage{kvoptions}
+
+\SetupKeyvalOptions{
+  family=sust,
+  prefix=sust@,
+  setkeys=\kvsetkeys
 }
 
-\ProcessOptions\relax
+\let\sust@setup@hook\@empty
 
-%------------------------------------------------
-% 加载基础类
-%------------------------------------------------
-\LoadClass[
-  UTF8,
-  a4paper,
-  zihao=-4
-]{ctexbook}
+\newcommand\sustsetup[1]{%
+  \let\sust@setup@hook\@empty
+  \kvsetkeys{sust}{#1}%
+  \sust@setup@hook
+}
+
+\newcommand\sust@define@key[1]{%
+  \kvsetkeys{sust@key}{#1}%
+}
+
+\kv@set@family@handler{sust@key}{%
+  \@namedef{sust@#1@@name}{#1}%
+  \def\sust@@default{}%
+  \def\sust@@choices{}%
+
+  \kv@define@key{sust@value}{name}{%
+    \@namedef{sust@#1@@name}{##1}%
+  }%
+
+  \@namedef{sust@#1@@check}{}%
+  \@namedef{sust@#1@@code}{}%
+
+  \kv@define@key{sust@value}{choices}{%
+    \def\sust@@choices{##1}%
+    \@namedef{sust@#1@@reset}{}%
+
+    \@namedef{sust@#1@@check}{%
+      \@ifundefined{%
+        ifsust@\@nameuse{sust@#1@@name}@%
+        \@nameuse{sust@\@nameuse{sust@#1@@name}}%
+      }{%
+        \sust@error{%
+          Invalid value
+          "#1 = \@nameuse{sust@\@nameuse{sust@#1@@name}}"%
+        }%
+      }{}%
+
+      \@nameuse{sust@#1@@reset}%
+
+      \@nameuse{%
+        sust@\@nameuse{sust@#1@@name}@%
+        \@nameuse{sust@\@nameuse{sust@#1@@name}}true%
+      }%
+    }%
+  }%
+
+  \kv@define@key{sust@value}{default}{%
+    \def\sust@@default{##1}%
+  }%
+
+  \kvsetkeys{sust@value}{#2}%
+
+  \@namedef{sust@\@nameuse{sust@#1@@name}}{}%
+
+  \kv@set@family@handler{sust@choice}{%
+    \ifx\sust@@default\@empty
+      \def\sust@@default{##1}%
+    \fi
+
+    \expandafter\newif
+      \csname
+        ifsust@\@nameuse{sust@#1@@name}@##1%
+      \endcsname
+
+    \expandafter\g@addto@macro
+      \csname sust@#1@@reset\endcsname{%
+        \@nameuse{%
+          sust@\@nameuse{sust@#1@@name}@##1false%
+        }%
+      }%
+  }%
+
+  \kvsetkeys@expandafter{sust@choice}{\sust@@choices}%
+
+  \expandafter\let
+    \csname sust@\@nameuse{sust@#1@@name}\endcsname
+    \sust@@default
+
+  \expandafter\ifx
+    \csname sust@\@nameuse{sust@#1@@name}\endcsname
+    \@empty
+  \else
+    \@nameuse{sust@#1@@check}%
+  \fi
+
+  \kv@define@key{sust}{#1}{%
+    \@namedef{sust@\@nameuse{sust@#1@@name}}{##1}%
+    \@nameuse{sust@#1@@check}%
+    \@nameuse{sust@#1@@code}%
+  }%
+}
+
+\newcommand\sust@option@hook[2]{%
+  \expandafter\g@addto@macro
+    \csname sust@#1@@code\endcsname{#2}%
+}
+
+\sust@define@key{
+  degree = {
+    choices = {
+      bachelor,
+      master,
+      doctor,
+      postdoc,
+    },
+    default = doctor,
+  }
+}
+
+\sust@define@key{
+  title = {
+    default = {标题},
+  },
+  title* = {
+    default = {Title},
+    name    = title@en,
+  },
+  author = {
+    default = {姓名},
+  },
+  author* = {
+    default = {Name of author},
+    name    = author@en,
+  },
+}
+
+
+\DeclareDefaultOption{\PassOptionsToClass{\CurrentOption}{ctexbook}}
+\ProcessKeyvalOptions*
+
+\LoadClass[UTF8, a4paper, zihao=-4,scheme=plain]{ctexbook}
+
 \raggedbottom
 % 英文字体
 \setmainfont{Times New Roman}
@@ -40,41 +168,103 @@
   AutoFakeBold=2
 ]
 
-\setlength{\baselineskip}{20pt}
-
-\ctexset{
+\ctexset{%
   chapter = {
-    format     = \centering\heiti\zihao{3},
-    beforeskip = \z@,
-    afterskip  = 16bp,
-    name = {},
-    numberformat= \normalfont,
-    number = \arabic{chapter},
-    aftername = \hspace{0.5em},
+    nameformat   = {},
+    numberformat = {},
+    titleformat  = {},
+    fixskip      = true,
+    afterindent  = true,
+    lofskip      = 0pt,
+    lotskip      = 0pt,
   },
   section = {
-    format     = \raggedright\heiti\zihao{4},
-    beforeskip = 0.5\baselineskip,
-    afterskip  = 0.5\baselineskip,
-    name = {},
-    numberformat= \normalfont,
-    aftername = \hspace{0.5em}
+    afterindent  = true,
   },
   subsection = {
-    format     = \raggedright\heiti\zihao{-4},
-    beforeskip = 0.5\baselineskip,
-    afterskip  = 0.5\baselineskip,
-    name = {},
-    numberformat= \normalfont,
-    aftername = \hspace{0.5em}
-  }
+    afterindent  = true,
+  },
+  subsubsection = {
+    afterindent  = true,
+  },
+  paragraph/afterindent = true,
+  subparagraph/afterindent = true,
 }
 
+\renewcommand\normalsize{%
+  \fontsize{12pt}{20pt}\selectfont
+}
+
+
+
+
+\ifsust@degree@bachelor
+  \ctexset{
+    chapter = {
+      format     = \centering\heiti\zihao{3},
+      titleformat ={},
+      beforeskip = 20pt,
+      afterskip  = 20pt,
+      name = {},
+      numberformat= \normalfont,
+      number = \arabic{chapter},
+      aftername = \hspace{0.5em},
+    },
+    section = {
+      format     = \raggedright\heiti\zihao{4},
+      beforeskip = 0.5\baselineskip,
+      afterskip  = 0.5\baselineskip,
+      name = {},
+      numberformat= \normalfont,
+      aftername = \hspace{0.5em}
+    },
+    subsection = {
+      format     = \raggedright\heiti\zihao{-4},
+      beforeskip = 0.5\baselineskip,
+      afterskip  = 0.5\baselineskip,
+      name = {},
+      numberformat= \normalfont,
+      aftername = \hspace{0.5em}
+    }
+  }
+\else
+  \ctexset{
+    chapter = {
+      format = \raggedright\bfseries\fontsize{16pt}{20pt}\selectfont,
+      beforeskip = 20pt,
+      afterskip  = 20pt,
+      name = {},
+      numberformat= \normalfont,
+      number = \arabic{chapter},
+      aftername = \hspace{0.5em},
+    },
+    section = {
+      format     = \raggedright\bfseries\fontsize{14pt}{20pt}\selectfont,
+      beforeskip = 10pt,
+      afterskip  = 10pt,
+      name = {},
+      numberformat= \normalfont,
+      % number = \arabic{chapter},
+      aftername = \hspace{0.5em},
+    },
+    subsection = {
+      format     = \raggedright\bfseries\fontsize{12pt}{20pt}\selectfont,
+      beforeskip = \z@,
+      afterskip  = \z@,
+      name = {},
+      numberformat= \normalfont,
+      % number = \arabic{chapter},
+      aftername = \hspace{0.5em},
+    }
+  }
+\fi
 
 %------------------------------------------------
 % 加载宏包
 %------------------------------------------------
 \RequirePackage{geometry}
+
+\ifsust@degree@bachelor
 \geometry{
   left   = 2.8cm,
   right  = 2.2cm,
@@ -83,7 +273,15 @@
   headsep=0.77cm,
   bottom = 2.2cm
 }
-
+\else
+\geometry{
+  top=3.0cm,
+  bottom=2.8cm,
+  left=2.8cm,
+  right=2.1cm,
+  headheight=14pt,
+}
+\fi
 
 \RequirePackage{graphicx}
 \RequirePackage{xcolor}
@@ -117,61 +315,20 @@
 \RequirePackage[sort&compress]{gbt7714}
 \bibliographystyle{gbt7714-numerical}
 
-\RequirePackage{kvsetkeys}
-\RequirePackage{kvdefinekeys}
-
-\RequirePackage{kvsetkeys}
-\RequirePackage{kvdefinekeys}
-
-\makeatletter
-
-\newcommand\sustsetup[1]{%
-  \let\sust@setup@hook\@empty
-  \kvsetkeys{sust}{#1}%
-  \sust@setup@hook
-}
-
-\newcommand\sust@addto@setup@hook[1]{%
-  \g@addto@macro\sust@setup@hook{#1}%
-}
-
-\define@key{sust}{title}{%
-  \def\sust@title{#1}%
-}
-
-\define@key{sust}{author}{%
-  \def\sust@author{#1}%
-}
-
-\define@key{sust}{language}{%
-  \def\sust@language{#1}%
-  \sust@addto@setup@hook{%
-  }%
-}
-
-% key, default value
-\def\sust@title{本科毕业设计题目}
-\def\sust@author{}
-\def\sust@language{chinese}
-
 \RequirePackage{tabularx}
-
 \RequirePackage{fancyhdr}
-
 \fancypagestyle{plain}{%
   \fancyhf{} 
   \fancyhead{}
   \fancyfoot{}
   \fancyhead[CE]{\zihao{-5}毕业设计（论文）题目}%
   \fancyhead[CO]{\zihao{-5}陕西科技大学毕业论文（设计说明书）}
-  \fancyhead[R]{\underline{\zihao{5}\thepage}}
+  \fancyfoot[C]{\zihao{5}\thepage}
 
   \renewcommand{\headrule}{%
-    \vspace{-11pt}%
-    \hbox to \textwidth{%   <--- 加上这个盒子，告诉它们这一行总共这么宽！
-      \hrulefill%           <--- 现在它知道自己该向右延伸了
-      \hspace{1em}%         <--- 紧跟在右边的 3 字符空格
-    }%
+        \hrule height 0.5pt
+        \vskip 1pt
+        \hrule height 0.5pt
   }
 }
 
@@ -235,8 +392,7 @@
       \makebox[3em][c]{2026}年\makebox[1.5em][c]{6}月\makebox[1.5em][c]{21}日
     \end{center}
   \endgroup
-  
-  
+
 }
 
 \newcommand{\sust@error}[1]{%
@@ -297,7 +453,6 @@
 }
 
 \newenvironment{abstract}{%
-
   \begingroup
     \begin{center}
       \zihao{3}\heiti 设计（论文）题目
@@ -325,11 +480,7 @@
   \clearpage
 }
 
-
 \newenvironment{abstract*}{%
-  \begingroup
-    
-  \endgroup
   \begingroup
     \ctexset{
       chapter= {
@@ -355,10 +506,10 @@
 }
 
 \RequirePackage{notoccite}
-
+\def\contentsname{目录}
 \renewcommand\tableofcontents{
   \begingroup
-  \ctexset{chapter/titleformat = \sust@stretch{2.5em}}%
+  \ctexset{chapter/titleformat = \centering\sust@stretch{2.5em}}%
   \sust@chapter*[]{\contentsname}
   \@starttoc{toc}%
   \endgroup
@@ -393,10 +544,6 @@
   {\thecontentslabel\space}
   {}
   {\sust@leaders\thecontentspage}
-
-\makeatother
-
-
 
 \pdfstringdefDisableCommands{%
   \let\\\relax
